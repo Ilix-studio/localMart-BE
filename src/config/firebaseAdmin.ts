@@ -98,5 +98,15 @@ export const getFirebaseAuth = (): admin.auth.Auth => {
   return admin.auth();
 };
 
+/** Admin Messaging instance (FCM). Throws if Firebase Admin is not initialised. */
+export const getFirebaseMessaging = (): admin.messaging.Messaging => {
+  if (admin.apps.length === 0) {
+    throw new Error(
+      "Firebase Admin is not initialized — check the FIREBASE_* env vars.",
+    );
+  }
+  return admin.messaging();
+};
+
 export { admin };
 export default initFirebaseAdmin;

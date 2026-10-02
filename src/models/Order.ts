@@ -8,6 +8,8 @@ export interface IOrderItem {
   name: string;
   price: number;
   quantity: number;
+  /** Merchant that stocks the product; absent on seeded demo rows. */
+  merchant?: Types.ObjectId;
 }
 
 /** Delivery address at order time — a snapshot, not a ref to the customer's
@@ -40,6 +42,7 @@ const OrderItemSchema = new Schema<IOrderItem>(
     name: { type: String, required: true, trim: true },
     price: { type: Number, required: true, min: 0 },
     quantity: { type: Number, required: true, min: 1 },
+    merchant: { type: Schema.Types.ObjectId, ref: "Merchant" },
   },
   { _id: false },
 );

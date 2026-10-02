@@ -1,10 +1,12 @@
 import { Response } from "express";
+import { Types } from "mongoose";
 import asyncHandler from "express-async-handler";
 
 import Customer from "../models/Customer";
 import Order from "../models/Order";
 import Product from "../models/Product";
 import { ERROR_CODES } from "../utils/errorResponse";
+import { notifyNewOrder } from "../services/notification.service";
 import { toOrderDto } from "../services/order.service";
 import { AuthedRequest } from "../types/auth.types";
 
@@ -76,6 +78,7 @@ export const createOrder = asyncHandler(
       name: string;
       price: number;
       quantity: number;
+      merchant?: Types.ObjectId;
     }[] = [];
 
     for (const raw of items) {
@@ -131,6 +134,7 @@ export const createOrder = asyncHandler(
         name: variant ? `${product.name}, ${variant.label}` : product.name,
         price,
         quantity,
+        merchant: product.merchant,
       });
     }
 
@@ -152,6 +156,9 @@ export const createOrder = asyncHandler(
       paymentMethod,
       total,
     }).save();
+
+    // After the response is decided: a push failure must never fail an order.
+    void notifyNewOrder(order);
 
     res.status(201).json({
       success: true,

@@ -40,6 +40,8 @@ export interface IPartner extends Document {
   reviewNote?: string;
   reviewedAt?: Date;
   isActive: boolean;
+  /** FCM web-push device tokens, newest last. */
+  fcmTokens: string[];
   lastLoginAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -117,6 +119,7 @@ export const createPartnerSchema = <T extends IPartner>(role: Role) => {
       reviewNote: { type: String, trim: true },
       reviewedAt: { type: Date },
       isActive: { type: Boolean, default: true },
+      fcmTokens: { type: [String], default: [], select: false },
       lastLoginAt: { type: Date },
     },
     { timestamps: true },

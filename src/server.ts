@@ -17,6 +17,7 @@ import seedCatalogData from "./aPrivilege/catalogSeeder";
 import productRoutes from "./routes/Catalog/products";
 import restaurantRoutes from "./routes/Catalog/restaurants";
 import orderRoutes from "./routes/Order/orders";
+import notificationRoutes from "./routes/notifications";
 
 // Create Express application
 const app: Application = express();
@@ -91,6 +92,9 @@ app.use("/api/restaurants", restaurantRoutes);
 
 // Orders carry a bearer token on every call, same budget as the actor routes.
 app.use("/api/orders", apiLimiter, orderRoutes);
+
+// Device-token registration for order alerts (Admin / Merchant).
+app.use("/api/notifications", apiLimiter, notificationRoutes);
 
 // Seeding writes to the live catalogue, so it is rate limited and stays
 // disabled unless ALLOW_CATALOG_SEED=true (enforced in the handler).

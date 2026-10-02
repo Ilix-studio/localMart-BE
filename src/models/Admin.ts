@@ -17,6 +17,8 @@ export interface IAdmin extends Document {
   role: typeof ROLES.ADMIN;
   designation: AdminDesignation;
   isActive: boolean;
+  /** FCM web-push device tokens, newest last. */
+  fcmTokens: string[];
   createdAt: Date;
   updatedAt: Date;
   matchPassword(enteredPassword: string): Promise<boolean>;
@@ -70,6 +72,7 @@ const AdminSchema = new Schema<IAdmin>(
       type: Boolean,
       default: true,
     },
+    fcmTokens: { type: [String], default: [], select: false },
   },
   {
     timestamps: true,
