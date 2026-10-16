@@ -5,6 +5,10 @@ const allowOrigins = [
   // Admin and Farmer web apps (dev)
   "http://localhost:5174",
   "http://localhost:5175",
+  // Expo web (CustomerApp, MechantApp, DriverApp; ports pinned in their `web` scripts)
+  "http://localhost:8081",
+  "http://localhost:8082",
+  "http://localhost:8083",
   "https://localmart.live",
   "https://www.localmart.live",
 ];

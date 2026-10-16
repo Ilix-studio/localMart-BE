@@ -25,6 +25,11 @@ import notificationRoutes from "./routes/notifications";
 const app: Application = express();
 const PORT = process.env.PORT || 8080;
 
+// Behind the Nginx gateway (or Cloud Run) every request arrives from the proxy,
+// so trust its X-Forwarded-For hop. Without this, the rate limiter below would
+// treat all clients as one IP. Set TRUST_PROXY=1 when proxied.
+if (process.env.TRUST_PROXY) app.set("trust proxy", Number(process.env.TRUST_PROXY) || 1);
+
 //CORS
 app.use(cors(corsOptions));
 

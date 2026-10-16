@@ -327,6 +327,111 @@ export const createPartnerController = (
   }),
 
   /**
+   * @desc    Sign in or sign up with a phone number, proved by a Firebase
+   *          phone-OTP ID token
+   * @route   POST /auth/phone
+   * @access  Public
+   */
+  loginWithPhone: asyncHandler(async (req: Request, res: Response) => {
+    const { idToken, name } = req.body;
+
+    if (!idToken) {
+      res.status(400).json({
+        success: false,
+        message: "idToken is required",
+        code: ERROR_CODES.VALIDATION_FAILED,
+      });
+      return;
+    }
+
+    const verified = await verifyFirebaseIdToken(idToken);
+
+    if (!verified.ok) {
+      logger.info(`Failed ${label} phone login: token rejected`);
+      res.status(verified.status).json({
+        success: false,
+        message: verified.message,
+        code: verified.code,
+      });
+      return;
+    }
+
+    // Only the decoded token is trusted; a phone number in the body is not.
+    const { uid, phone_number } = verified.decoded;
+    if (!phone_number) {
+      res.status(400).json({
+        success: false,
+        message: "A verified phone number is required",
+        code: ERROR_CODES.VALIDATION_FAILED,
+      });
+      return;
+    }
+    // Firebase gives "+919876543210"; we store the 10 digits partners type.
+    const phone = phone_number.replace(/\D/g, "").slice(-10);
+
+    // Matching on phone alone is limited to accounts that proved their number
+    // by OTP: a typed number on an email or Google account is unverified, and
+    // linking to it would hand that account to whoever owns the number.
+    const existing =
+      (await repo.findByFirebaseUid(uid)) ??
+      (await repo.findByVerifiedPhone(phone));
+
+    if (existing && !existing.isActive) {
+      res.status(403).json({
+        success: false,
+        message: "Account is deactivated",
+        code: ERROR_CODES.ACCOUNT_DISABLED,
+      });
+      return;
+    }
+
+    const extra = existing ? undefined : extras?.fromBody(req.body);
+    if (extra && "error" in extra) {
+      res.status(400).json({
+        success: false,
+        message: extra.error,
+        code: ERROR_CODES.VALIDATION_FAILED,
+      });
+      return;
+    }
+
+    const isNew = !existing;
+    const partner = existing
+      ? await repo.update(existing.id, {
+          firebaseUid: uid,
+          lastLoginAt: new Date(),
+        })
+      : await repo.create({
+          name: String(name ?? "").trim() || label,
+          phoneNumber: phone,
+          firebaseUid: uid,
+          provider: AUTH_PROVIDERS.PHONE,
+          profileStatus: PROFILE_STATUS.PENDING_DOCUMENTS,
+          lastLoginAt: new Date(),
+          ...(extra?.data ?? {}),
+        });
+
+    const token = signPartnerToken(partner, role);
+    logger.info(`${label} logged in with phone: ${phone}`);
+
+    res.status(isNew ? 201 : 200).json({
+      success: true,
+      message: isNew ? "Account created" : "Login successful",
+      data: {
+        id: partner.id,
+        name: partner.name,
+        email: partner.email ?? undefined,
+        role,
+        profileStatus: partner.profileStatus,
+        canOperate: canOperate(partner),
+        ...(partner.businessTypes ? { businessTypes: partner.businessTypes } : {}),
+        isNew,
+        token,
+      },
+    });
+  }),
+
+  /**
    * @desc    The partner's own profile, including why it is held
    * @route   GET /me
    * @access  Merchant | Driver

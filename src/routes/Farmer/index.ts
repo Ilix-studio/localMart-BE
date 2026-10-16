@@ -12,7 +12,9 @@ import { authorize, protect } from "../../middleware/authmiddleware";
 import { createPartnerRouter } from "../partnerRoutes";
 import { ROLES } from "../../types/auth.types";
 
-const router = createPartnerRouter(farmerController, ROLES.FARMER);
+const router = createPartnerRouter(farmerController, ROLES.FARMER, {
+  phoneLogin: false,
+});
 
 // Phone-OTP sign-in, alongside email/password and Google.
 router.post("/auth/phone", loginWithPhone);

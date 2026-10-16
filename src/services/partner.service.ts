@@ -49,6 +49,8 @@ export interface PartnerRepo {
   findById(id: string): Promise<PartnerRow | null>;
   findByEmail(email: string, withPassword?: boolean): Promise<PartnerRow | null>;
   findByFirebaseUid(uid: string): Promise<PartnerRow | null>;
+  /** Only accounts created by phone OTP, whose number was proved rather than typed. */
+  findByVerifiedPhone(phoneNumber: string): Promise<PartnerRow | null>;
   create(data: Record<string, unknown>): Promise<PartnerRow>;
   update(id: string, data: Record<string, unknown>): Promise<PartnerRow>;
   list(status?: string): Promise<PartnerRow[]>;
@@ -56,6 +58,7 @@ export interface PartnerRepo {
 
 interface PartnerDelegate {
   findUnique(args: Record<string, unknown>): Promise<PartnerRow | null>;
+  findFirst(args: Record<string, unknown>): Promise<PartnerRow | null>;
   findMany(args: Record<string, unknown>): Promise<PartnerRow[]>;
   create(args: Record<string, unknown>): Promise<PartnerRow>;
   update(args: Record<string, unknown>): Promise<PartnerRow>;
@@ -70,6 +73,8 @@ const repoFor = (delegate: PartnerDelegate): PartnerRepo => ({
     }),
   findByFirebaseUid: (firebaseUid) =>
     delegate.findUnique({ where: { firebaseUid } }),
+  findByVerifiedPhone: (phoneNumber) =>
+    delegate.findFirst({ where: { phoneNumber, provider: "phone" } }),
   create: (data) => delegate.create({ data }),
   update: (id, data) => delegate.update({ where: { id }, data }),
   list: (status) =>

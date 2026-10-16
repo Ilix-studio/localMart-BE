@@ -67,7 +67,8 @@ model Address {
 model Merchant {
   id            String    @id @default(uuid())
   name          String
-  email         String    @unique
+  // Null only for an account created with a phone OTP.
+  email         String?   @unique
   phoneNumber   String?
   // Absent on Google-only accounts.
   password      String?
@@ -103,7 +104,8 @@ model Merchant {
 model Driver {
   id            String    @id @default(uuid())
   name          String
-  email         String    @unique
+  // Null only for an account created with a phone OTP.
+  email         String?   @unique
   phoneNumber   String?
   password      String?
   provider      String    @default("password")

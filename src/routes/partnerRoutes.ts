@@ -28,6 +28,8 @@ import { ADMIN_DESIGNATIONS, ROLES, Role } from "../types/auth.types";
 export const createPartnerRouter = (
   controller: ReturnType<typeof createPartnerController>,
   role: Role,
+  /** Farmers mount their own `/auth/phone`, which matches on the unique phone column. */
+  { phoneLogin = true }: { phoneLogin?: boolean } = {},
 ): Router => {
   const router = express.Router();
 
@@ -35,6 +37,7 @@ export const createPartnerRouter = (
   router.post("/register", controller.register);
   router.post("/login", controller.login);
   router.post("/auth/google", controller.loginWithGoogle);
+  if (phoneLogin) router.post("/auth/phone", controller.loginWithPhone);
 
   // The partner's own held profile
   router.get("/me", protect, authorize(role), controller.getProfile);
